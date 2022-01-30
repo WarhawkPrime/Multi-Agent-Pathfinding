@@ -268,7 +268,7 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 		//check if OPEN.TopKey < Calckey(s_start)
 		if (current.get()->id == src_id)
 		{
-			std::cout << "start found " << std::endl;
+				//std::cout << "start found " << std::endl;
 			current.get()->cost_g = current.get()->cost_rhs;
 			//std::cout << "id " << current.get()->id << std::endl;
 			//std::cout << "g " << current.get()->cost_g << std::endl;
@@ -328,7 +328,7 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 			}
 		}
 	}
-	std::cout << " returned false, start could not been found " << std::endl;
+		//std::cout << " returned false, start could not been found " << std::endl;
 	return false;
 }
 
@@ -353,8 +353,8 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 	std::set<int> blocking_vertices_old;
 	std::set<int> blocking_vertices_new;
 
-	std::cout << "--------------------" << std::endl;
-	std::cout << "start agent nr." << agent.get()->id << " at: " << src_start << " at: t+ " << local_time << std::endl;
+		//std::cout << "--------------------" << std::endl;
+		//std::cout << "start agent nr." << agent.get()->id << " at: " << src_start << " at: t+ " << local_time << std::endl;
 	path.insert(src_start);
 	
 	graph.agent_occupancies.insert(std::make_pair(local_time, std::make_pair(src_start, agent.get()->id)));
@@ -408,7 +408,7 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 		// if rhs(s_start = INFINITY), then there is no known path
 		if (graph.vertex_map.at(src_start).get()->cost_rhs == INT_MAX)
 		{
-			std::cout << " you shall not path! " << std::endl;
+			//std::cout << " you shall not path! " << std::endl;
 			return false;
 		}
 
@@ -496,6 +496,6 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 		}
 	}
 	
-	std::cout << " end " << std::endl;
+		//std::cout << " end " << std::endl;
 	return true;
 }

@@ -48,10 +48,10 @@ bool update_agents(T_graph& graph, U_agents& agents, V_finished& finished)
 			{
 				finished.insert(agent.get()->id);
 			}
-			std::cout << " move agent nr. " << agent.get()->id << " to: " << agent.get()->next_step << std::endl;
+				//std::cout << " move agent nr. " << agent.get()->id << " to: " << agent.get()->next_step << std::endl;
 		}
 	}
-	std::cout << std::endl;
+		//std::cout << std::endl;
 	return true;
 }
 
@@ -85,7 +85,7 @@ template <typename T_graph>
 bool update_obstacles(T_graph& graph)
 {
 
-	std::cout << " obs size: " << graph.occupancies.size() << std::endl;
+		//std::cout << " obs size: " << graph.occupancies.size() << std::endl;
 
 	//for all 0 < time < INT_MAX
 	for (auto& occ : graph.occupancies)
@@ -170,8 +170,8 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	std::shared_ptr<Agent> a0 = std::make_shared<Agent>(0, 0);
 	graph.destinations.insert(std::make_pair(0, 200));
 	
-	std::shared_ptr<Agent> a1 = std::make_shared<Agent>(1, 1);
-	graph.destinations.insert(std::make_pair(1, 8));
+	std::shared_ptr<Agent> a1 = std::make_shared<Agent>(1, 100);
+	graph.destinations.insert(std::make_pair(1, 999));
 	
 	std::shared_ptr<Agent> a2 = std::make_shared<Agent>(2, 10);
 	graph.destinations.insert(std::make_pair(2, 20));
@@ -204,7 +204,7 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	agent_heuristic(graph, a0, 200);
 	agents.insert(a0);
 	
-	agent_heuristic(graph, a1, 8);
+	agent_heuristic(graph, a1, 999);
 	agents.insert(a1);
 	
 	agent_heuristic(graph, a2, 20);
@@ -360,9 +360,10 @@ forever
 	update(S);	//update start positions to current positions
 				//a req of D* Lite
 */
-template <typename T_graph>
-bool multiagent_main(T_graph& graph)
+template <typename T_graph, typename U_agents>
+bool multiagent_main(T_graph& graph, U_agents& agents)
 {
+	/*
 	auto agent_cmp = [](std::shared_ptr<Agent> a0, std::shared_ptr<Agent> a1) {return a0.get()->priority < a1.get()->priority; };
 	std::set<std::shared_ptr<Agent>, decltype(agent_cmp)> agents;
 
@@ -370,9 +371,9 @@ bool multiagent_main(T_graph& graph)
 
 	initialize_multiagent(graph, agents);
 	initialize_obstacles(graph);
-
-	std::cout << " START : agent count: " << agents.size() << std::endl;
-
+	*/
+			//std::cout << " START : agent count: " << agents.size() << std::endl;
+	std::set<int> finished;
 	/*
 	Idea: 
 	a vertex is blocked for an agent if its an obstacle
@@ -399,15 +400,18 @@ bool multiagent_main(T_graph& graph)
 		//call multiagent for every agent until all finished
 		update_obstacles(graph);
 
-		std::cout << " all obstacle occupancies: " << std::endl;
+		//std::cout << " all obstacle occupancies: " << std::endl;
+		/*
 		for (const auto& occ : graph.occupancies)
 		{
 			std::cout << " t+ " << occ.first << " at " << occ.second.first << std::endl;
 		} 
+		*/
 
 		//path calculation
 		multiagent_dlite(graph, agents, finished);
 
+		/*
 		std::cout << std::endl;
 		std::cout << " all agent occupancies: " << std::endl;
 		for (const auto& time_ver_agt : graph.agent_occupancies)
@@ -415,10 +419,10 @@ bool multiagent_main(T_graph& graph)
 			std::cout << " t+ " << time_ver_agt.first << " at " << time_ver_agt.second.first << " for " << time_ver_agt.second.second << std::endl;
 		}
 		std::cout << std::endl;
+		*/
 
 		//clear all agent timings, 
 		graph.agent_occupancies.clear();
-
 
 		// update agents
 		update_agents(graph, agents, finished);
@@ -428,7 +432,7 @@ bool multiagent_main(T_graph& graph)
 		
 	}
 	
-	std::cout << "all agents found a path " << std::endl;
+		//std::cout << "all agents found a path " << std::endl;
 
 	//update all obstacles
 

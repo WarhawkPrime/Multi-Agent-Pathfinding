@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Adapted_DStar_Light", "Adap
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Multi_Agent_Pathfinding", "Multi_Agent_Pathfinding\Multi_Agent_Pathfinding.vcxproj", "{5F10C742-9329-4996-8E16-53D49B0B215F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{57DB9345-BF62-4421-B202-2218E3A174FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +63,14 @@ Global
 		{5F10C742-9329-4996-8E16-53D49B0B215F}.Release|x64.Build.0 = Release|x64
 		{5F10C742-9329-4996-8E16-53D49B0B215F}.Release|x86.ActiveCfg = Release|Win32
 		{5F10C742-9329-4996-8E16-53D49B0B215F}.Release|x86.Build.0 = Release|Win32
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Debug|x64.ActiveCfg = Debug|x64
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Debug|x64.Build.0 = Debug|x64
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Debug|x86.ActiveCfg = Debug|Win32
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Debug|x86.Build.0 = Debug|Win32
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Release|x64.ActiveCfg = Release|x64
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Release|x64.Build.0 = Release|x64
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Release|x86.ActiveCfg = Release|Win32
+		{57DB9345-BF62-4421-B202-2218E3A174FD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

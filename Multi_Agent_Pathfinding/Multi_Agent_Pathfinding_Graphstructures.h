@@ -305,8 +305,8 @@ bool construct_graph(T_Graph& graph, int radius)
 		map_vertices(graph, i, edge_ids_taken, vertex_ids_taken);
 	}
 
-	std::cout << "vertex cout: " << graph.vertex_map.size() << std::endl;
-	std::cout << "edge cout: " << graph.edge_map.size() << std::endl;
+	//std::cout << "vertex cout: " << graph.vertex_map.size() << std::endl;
+	//std::cout << "edge cout: " << graph.edge_map.size() << std::endl;
 
 	return true;
 }

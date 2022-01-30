@@ -8,7 +8,13 @@ int main()
 	Graph graph;
 	construct_graph(graph, 10);
 
-	multiagent_main(graph);
+	auto agent_cmp = [](std::shared_ptr<Agent> a0, std::shared_ptr<Agent> a1) {return a0.get()->priority < a1.get()->priority; };
+	std::set<std::shared_ptr<Agent>, decltype(agent_cmp)> agents;
+
+	initialize_multiagent(graph, agents);
+	initialize_obstacles(graph);
+
+	multiagent_main(graph, agents);
 
 	//dstarlite_main(graph, 0, 200);
 	
