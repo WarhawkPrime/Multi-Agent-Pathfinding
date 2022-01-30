@@ -361,7 +361,7 @@ forever
 				//a req of D* Lite
 */
 template <typename T_graph, typename U_agents>
-bool multiagent_main(T_graph& graph, U_agents& agents)
+bool multiagent_main(T_graph& graph, U_agents& agents, int& iterations)
 {
 	/*
 	auto agent_cmp = [](std::shared_ptr<Agent> a0, std::shared_ptr<Agent> a1) {return a0.get()->priority < a1.get()->priority; };
@@ -429,7 +429,7 @@ bool multiagent_main(T_graph& graph, U_agents& agents)
 
 		//update obstacles
 		
-		
+		iterations++;
 	}
 	
 		//std::cout << "all agents found a path " << std::endl;

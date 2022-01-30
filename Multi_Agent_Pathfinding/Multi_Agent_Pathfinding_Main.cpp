@@ -14,7 +14,8 @@ int main()
 	initialize_multiagent(graph, agents);
 	initialize_obstacles(graph);
 
-	multiagent_main(graph, agents);
+	int iterations = 0;
+	multiagent_main(graph, agents, iterations);
 
 	//dstarlite_main(graph, 0, 200);
 	

@@ -43,8 +43,9 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" *doctest::description("functional tes
 			agent_heuristic(graph, a0, 8);
 			agents.insert(a0);
 
+			int iterations = 0;
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
@@ -67,8 +68,9 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" *doctest::description("functional tes
 			agent_heuristic(graph, a0, 999);
 			agents.insert(a0);
 
+			int iterations = 0;
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
@@ -109,9 +111,9 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" *doctest::description("functional tes
 			agent_heuristic(graph, a3, 2);
 			agents.insert(a3);
 		
-
+			int iterations = 0;
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
@@ -129,9 +131,10 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" *doctest::description("functional tes
 			std::set<std::shared_ptr<Agent>, decltype(agent_cmp)> agents;
 
 			initialize_multiagent(graph, agents);
+			int iterations = 0;
 
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
@@ -145,7 +148,7 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" *doctest::description("functional tes
 
 
 
-bool single_agent(int src, int dst,std::chrono::microseconds& dur)
+int single_agent(int src, int dst,std::chrono::microseconds& dur)
 {
 	Graph graph;
 	construct_graph(graph, 3);
@@ -159,18 +162,20 @@ bool single_agent(int src, int dst,std::chrono::microseconds& dur)
 	agent_heuristic(graph, a0, dst);
 	agents.insert(a0);
 
+	int iterations = 0;
+
 	auto start = std::chrono::high_resolution_clock::now();
-	bool res = multiagent_main(graph, agents);
+	bool res = multiagent_main(graph, agents, iterations);
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
 	dur = duration;
 
-	return true;
+	return iterations;
 }
 
 
-bool single_agent_large_graph(int src, int dst, std::chrono::microseconds& dur)
+int single_agent_large_graph(int src, int dst, std::chrono::microseconds& dur)
 {
 	Graph graph;
 	construct_graph(graph, 10);
@@ -184,14 +189,16 @@ bool single_agent_large_graph(int src, int dst, std::chrono::microseconds& dur)
 	agent_heuristic(graph, a0, dst);
 	agents.insert(a0);
 
+	int iterations = 0;
+
 	auto start = std::chrono::high_resolution_clock::now();
-	bool res = multiagent_main(graph, agents);
+	bool res = multiagent_main(graph, agents, iterations);
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
 	dur = duration;
 
-	return true;
+	return iterations;
 }
 
 
@@ -206,16 +213,16 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 
 			// 4 single angents
 			std::chrono::microseconds first;
-			bool res1 = single_agent(1, 8, first);
+			int res1 = single_agent(1, 8, first);
 
 			std::chrono::microseconds second;
-			bool res2 = single_agent(3, 6, second);
+			int res2 = single_agent(3, 6, second);
 
 			std::chrono::microseconds third;
-			bool res3 = single_agent(4, 7, third);
+			int res3 = single_agent(4, 7, third);
 
 			std::chrono::microseconds fourth;
-			bool res4 = single_agent(5, 2, fourth);
+			int res4 = single_agent(5, 2, fourth);
 
 			
 
@@ -251,9 +258,10 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 			agent_heuristic(graph, a3, 2);
 			agents.insert(a3);
 
+			int iterations = 0;
 
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
@@ -264,6 +272,12 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 			std::cout << " duration " << duration << std::endl;
 			
 			CHECK(m < s);
+
+			int res_sum = res1 + res2 + res3 + res4;
+			std::cout << "iter: " << iterations << std::endl;
+			std::cout << "iter: " << res_sum << std::endl;
+			CHECK(iterations < res_sum);
+
 		}
 		SUBCASE("large graph multi or single")
 		{
@@ -275,47 +289,51 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 
 			initialize_multiagent(graph, agents);
 
+			int iterations = 0;
+
 			auto start = std::chrono::high_resolution_clock::now();
-			bool res = multiagent_main(graph, agents);
+			bool res = multiagent_main(graph, agents, iterations);
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
 
 			std::chrono::microseconds first;
-			bool res1 = single_agent_large_graph(0, 200, first);
+			int res1 = single_agent_large_graph(0, 200, first);
 
 			std::chrono::microseconds second;
-			bool res2 = single_agent_large_graph(100, 999, second);
+			int res2 = single_agent_large_graph(100, 999, second);
 
 			std::chrono::microseconds third;
-			bool res3 = single_agent_large_graph(10, 20, third);
+			int res3 = single_agent_large_graph(10, 20, third);
 
 			std::chrono::microseconds fourth;
-			bool res4 = single_agent_large_graph(500, 700, fourth);
+			int res4 = single_agent_large_graph(500, 700, fourth);
 
 			std::chrono::microseconds fith;
-			bool res5 = single_agent_large_graph(800, 5, fith);
+			int res5 = single_agent_large_graph(800, 5, fith);
 
 			std::chrono::microseconds sixth;
-			bool res6 = single_agent_large_graph(300, 212, sixth);
+			int res6 = single_agent_large_graph(300, 212, sixth);
 
 			std::chrono::microseconds seventh;
-			bool res7 = single_agent_large_graph(900, 21, seventh);
+			int res7 = single_agent_large_graph(900, 21, seventh);
 
 			std::chrono::microseconds eighth;
-			bool res8 = single_agent_large_graph(100, 666, eighth);
+			int res8 = single_agent_large_graph(100, 666, eighth);
 
 			std::chrono::microseconds ninth;
-			bool res9 = single_agent_large_graph(64, 850, ninth);
+			int res9 = single_agent_large_graph(64, 850, ninth);
 
 			std::chrono::microseconds tenth;
-			bool res10 = single_agent_large_graph(999, 9, tenth);
+			int res10 = single_agent_large_graph(999, 9, tenth);
 
 
 			auto sum = first + second + third + 
 						fourth + fith + sixth + 
 						seventh + eighth + ninth +
 						tenth ;
+
+			auto res_sum = res1 + res2 + res3 + res4 + res5 + res6 + res7 + res8 + res9 + res10;
 
 			//std::cout << "first" << first << std::endl;
 			std::cout << "second" << second << std::endl;
@@ -325,9 +343,12 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 			std::cout << " sum lg: " << sum << std::endl;
 			std::cout << " duration lg" << duration << std::endl;
 	
+			CHECK(m > s);
 
+			std::cout << "iter: " << iterations << std::endl;
+			std::cout << "iter res_sum: " << res_sum << std::endl;
 
-			CHECK(m < s);
+			CHECK(iterations < res_sum);
 		}
 
 	}
