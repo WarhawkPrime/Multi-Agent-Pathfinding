@@ -109,12 +109,15 @@ bool update_obstacles(T_graph& graph)
 
 		if (occ.first == INT_MAX)
 		{
+			//std::cout << "--- infinte block: ---" << occ.second.first << std::endl;
+
 			for (auto& edg_ver : graph.adjacency_map.at(occ.second.first))
 			{
 				graph.edge_map.at(edg_ver.first).get()->edge_weight = INT_MAX;
 			}
 		}
 	}
+
 
 	auto iter = graph.occupancies.begin();
 	auto endIter = graph.occupancies.end();
@@ -156,6 +159,7 @@ void initialize_obstacles(T_graph& graph)
 	graph.occupancies.insert(std::make_pair(5000, std::make_pair(18, 0)));
 	graph.occupancies.insert(std::make_pair(2000, std::make_pair(101, 1)));
 	graph.occupancies.insert(std::make_pair(2000, std::make_pair(102, 1)));
+	graph.occupancies.insert(std::make_pair(INT_MAX, std::make_pair(408, 3)));
 }
 
 //Initialize
@@ -182,25 +186,36 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	std::shared_ptr<Agent> a4 = std::make_shared<Agent>(4, 800);
 	graph.destinations.insert(std::make_pair(4, 5));
 	
-	
-
 	std::shared_ptr<Agent> a5 = std::make_shared<Agent>(5, 300);
 	graph.destinations.insert(std::make_pair(5, 212));
 
 	std::shared_ptr<Agent> a6 = std::make_shared<Agent>(6, 900);
 	graph.destinations.insert(std::make_pair(6, 21));
-
+	
 	std::shared_ptr<Agent> a7 = std::make_shared<Agent>(7, 100);
 	graph.destinations.insert(std::make_pair(7, 666));
-
+	
 	std::shared_ptr<Agent> a8 = std::make_shared<Agent>(8, 64);
 	graph.destinations.insert(std::make_pair(8, 850));
 
-	std::shared_ptr<Agent> a9 = std::make_shared<Agent>(9, 999);
+	std::shared_ptr<Agent> a9 = std::make_shared<Agent>(9, 990);
 	graph.destinations.insert(std::make_pair(9, 111));
+	
+	std::shared_ptr<Agent> a10 = std::make_shared<Agent>(10, 400);
+	graph.destinations.insert(std::make_pair(10, 611));
 
-	
-	
+	std::shared_ptr<Agent> a11 = std::make_shared<Agent>(11, 350);
+	graph.destinations.insert(std::make_pair(11, 735));
+
+	std::shared_ptr<Agent> a12 = std::make_shared<Agent>(12, 864);
+	graph.destinations.insert(std::make_pair(12, 425));
+
+	std::shared_ptr<Agent> a13 = std::make_shared<Agent>(13, 190);
+	graph.destinations.insert(std::make_pair(13, 698));
+
+	std::shared_ptr<Agent> a14 = std::make_shared<Agent>(14, 343);
+	graph.destinations.insert(std::make_pair(14, 117));
+
 	agent_heuristic(graph, a0, 200);
 	agents.insert(a0);
 	
@@ -215,7 +230,6 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	
 	agent_heuristic(graph, a4, 5);
 	agents.insert(a4);
-
 
 	agent_heuristic(graph, a5, 212);
 	agents.insert(a5);
@@ -232,7 +246,20 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	agent_heuristic(graph, a9, 111);
 	agents.insert(a9);
 
+	agent_heuristic(graph, a10, 611);
+	agents.insert(a10);
 
+	agent_heuristic(graph, a11, 725);
+	agents.insert(a11);
+
+	agent_heuristic(graph, a12, 425);
+	agents.insert(a12);
+
+	agent_heuristic(graph, a13, 698);
+	agents.insert(a13);
+
+	agent_heuristic(graph, a14, 117);
+	agents.insert(a14);
 
 	//init every start and destination as infinity
 
@@ -260,15 +287,115 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	return true;
 }
 
+/*
+destinations->obstacles->paths
 
+*/
 template <typename T_graph>
-void set_edges(T_graph& graph, const int& vertex_id, const double edge_weight )
+void set_edges(T_graph& graph, const int& vertex_id, const double edge_weight, bool priority )
 {
-	for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+
+	//only set edges to vertices which are no goal/start/agent obstacle or global obstacle.
+	//does only matter if edges are blocked
+
+	//destinations have the highest priority
+
+	if (priority)
 	{
-		graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+		for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+		{
+			graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+		}
+	}
+	else
+	{
+		for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+		{
+			if (!graph.is_goal(edg_ver.second) && !graph.is_occupancy(edg_ver.second))
+			{
+				if (graph.is_agent_occupancy(edg_ver.second))
+				{
+					double own_time;
+					double target_time;
+
+					for (const auto& [time, ver_agt] : graph.agent_occupancies)	//iterator for time range
+					{
+						if (ver_agt.first == edg_ver.second)
+							target_time = time;
+						
+						if(ver_agt.first == vertex_id)
+							own_time = time;
+					}
+
+					if(own_time != target_time)
+						graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+				}
+				else 
+				{
+					graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+				}
+			}
+			else
+			{
+				graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+			}
+		}
 	}
 
+	/*
+	switch (flag)
+	{
+	case 0:	//dst
+		for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+		{
+			graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+		}
+		break;
+	case 1:	//obs
+		for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+		{	if(graph.is_goal())
+			graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+		}
+		break;
+	case 2:	//path
+		break;
+	default:
+		break;
+	}
+
+
+
+	for (auto& edg_ver : graph.adjacency_map.at(vertex_id))
+	{
+
+		if (edge_weight < INT_MAX)
+		{
+			//no goal !graph.is_agent_occupancy(edg_ver.second)
+			if (!graph.is_goal(edg_ver.second) && !graph.is_occupancy(edg_ver.second) && )
+			{
+				graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+
+				if (edg_ver.second == 408)
+				{
+					std::cout << " direct compare with int max does not work " << edge_weight << std::endl;
+				}
+			}
+		}
+		else
+		{
+			graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+			if (edg_ver.second == 408)
+			{
+				std::cout << "setting edge of blocked as? " << edge_weight << std::endl;
+			}
+		}
+		
+
+		
+
+			//graph.edge_map.at(edg_ver.first).get()->edge_weight = edge_weight;
+	}
+	*/
 	//"reset" g and rhs
 	graph.vertex_map.at(vertex_id).get()->cost_g = INT_MAX;
 	graph.vertex_map.at(vertex_id).get()->cost_rhs = INT_MAX;
@@ -291,19 +418,28 @@ bool multiagent_dlite(T_graph& graph, U_agents& agents, V_finished& finished)
 		{
 			//set start and goal only for own agent to 1.
 			//free own position and dst
-			set_edges(graph, agent.get()->vertex_position, 1);
+
+			
+
+			set_edges(graph, agent.get()->vertex_position, 1, false);
+
+			
 
 			int dst_id = 0;
 			get_dst(graph, agent, dst_id);
-			set_edges(graph, dst_id, 1);
+			set_edges(graph, dst_id, 1, true);
+
+
+			
+
 
 			//used to reset all planned vertices
 			std::set<int> path;
 			dstarlite_main(graph, agent, path);
 
 			//reset start and goal
-			set_edges(graph, agent.get()->vertex_position, INT_MAX);
-			set_edges(graph, dst_id, INT_MAX);
+			set_edges(graph, agent.get()->vertex_position, INT_MAX, false);
+			set_edges(graph, dst_id, INT_MAX, true);
 			
 			//resetting all calculated costs of all vertices of the path. 
 			//the next agent must not use calculated values from other paths
@@ -327,22 +463,17 @@ bool multiagent_dlite(T_graph& graph, U_agents& agents, V_finished& finished)
 
 		//set start and goal to inf again
 
-	/*
+		
+		
+	
+		/*
 		if (!finished.contains(agent.get()->id))
 		{
 			//reset_occupancies(graph, agent);
 			dstarlite_main(graph, agent);
 			//set_occupancies(graph, agent);
-
-			/*
-			std::cout << " oocs: " << std::endl;
-			for (const auto& occ : graph.occupancy)
-			{
-				std::cout << " agent: " << occ.first << " node: " << occ.second.first << " timing: " << occ.second.second << std::endl;
-			}
-			*/
-	//	}
-	
+		}
+		*/
 
 	}
 
@@ -397,29 +528,44 @@ bool multiagent_main(T_graph& graph, U_agents& agents, int& iterations)
 	
 	while (finished.size() != agents.size())
 	{
-		//call multiagent for every agent until all finished
+		//call multiagent for every agent until all finished \newl
 		update_obstacles(graph);
 
-		//std::cout << " all obstacle occupancies: " << std::endl;
+		
+		//std::cout << " should be blocked! ---" << std::endl;
 		/*
-		for (const auto& occ : graph.occupancies)
-		{
-			std::cout << " t+ " << occ.first << " at " << occ.second.first << std::endl;
-		} 
+		for (const auto& edge : graph.adjacency_map.at(408))
+		{	
+
+			if (graph.edge_map.at(edge.first).get()->edge_weight == 1)
+			{
+				std::cout << "sigh" << std::endl;
+			}
+				//std::cout << "free at : " << iterations << std::endl;
+			//std::cout << " edge weight of blocked" << graph.edge_map.at(edge.first).get()->edge_weight << std::endl;
+		}
 		*/
+
+		//std::cout << " all obstacle occupancies: " << std::endl;
+		
+		//for (const auto& occ : graph.occupancies)
+		//{
+			//std::cout << " t+ " << occ.first << " at " << occ.second.first << std::endl;
+		//} 
+		
 
 		//path calculation
 		multiagent_dlite(graph, agents, finished);
 
-		/*
-		std::cout << std::endl;
-		std::cout << " all agent occupancies: " << std::endl;
+		
+		//std::cout << std::endl;
+		//std::cout << " all agent occupancies: " << std::endl;
 		for (const auto& time_ver_agt : graph.agent_occupancies)
 		{
-			std::cout << " t+ " << time_ver_agt.first << " at " << time_ver_agt.second.first << " for " << time_ver_agt.second.second << std::endl;
+			//std::cout << " t+ " << time_ver_agt.first << " at " << time_ver_agt.second.first << " for " << time_ver_agt.second.second << std::endl;
 		}
-		std::cout << std::endl;
-		*/
+		//std::cout << std::endl;
+		
 
 		//clear all agent timings, 
 		graph.agent_occupancies.clear();
@@ -432,7 +578,7 @@ bool multiagent_main(T_graph& graph, U_agents& agents, int& iterations)
 		iterations++;
 	}
 	
-		//std::cout << "all agents found a path " << std::endl;
+	//std::cout << "all agents found a path " << std::endl;
 
 	//update all obstacles
 

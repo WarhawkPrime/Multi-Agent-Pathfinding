@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright(c)[2022][Dennis Wilpert]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this softwareand associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright noticeand this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #pragma once
 
 #include "Multi_Agent_Pathfinding_Graphstructures.h"
@@ -127,8 +151,12 @@ void find_arg_min(T_graph& graph, const int& node, int& arg_min)
 	//for all successor. g should be calculated
 	for (const auto& edg_ver : graph.adjacency_map.at(node))
 	{
-		double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + graph.vertex_map.at(edg_ver.second).get()->cost_g;
+		//double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + graph.vertex_map.at(edg_ver.second).get()->cost_g;
+		
+		double val = graph.vertex_map.at(edg_ver.second).get()->cost_rhs;
 
+		//std::cout << "id: " << edg_ver.second << " val: " << val << std::endl;
+		
 		if (val < min_val)
 		{
 			min_val = val;
@@ -150,37 +178,7 @@ void move_agent(T_agent& agent, const int move_to)
 //==========	==========	==========	==========
 
 
-//========== MultiAgent ==========
-template <typename T_graph>
-void greedy_path(T_graph& graph, const int& src_id, const int& dst_id)
-{
-	int temp_src = src_id;
-	int temp_dst = dst_id;
 
-	double min_val = INT_MAX;
-	int min_val_id;
-	int arg_min = temp_src;
-	int old_arg_min = INT_MAX;
-
-	while (arg_min != temp_dst && old_arg_min != arg_min)
-	{
-		old_arg_min = arg_min;
-		//for all successor. g should be calculated
-		for (const auto& edg_ver : graph.adjacency_map.at(arg_min))
-		{
-			double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + graph.node_map.at(edg_ver.second).get()->cost_g;
-
-			if (val < min_val)
-			{
-				min_val = val;
-				min_val_id = edg_ver.second;
-			}
-		}
-
-		arg_min = min_val_id;
-	}
-}
-//========== MultiAgent ==========
 
 // initialize
 void initialize_dstarlite()
@@ -218,7 +216,7 @@ void calc_rhs(T_graph& graph, const int& node_id, const int& dst_id, double& rhs
 
 // update vertex
 template <typename T_graph, typename U_queue>
-void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& open_tracker, const int& node_id, const int& src_id, const int& dst_id, const double& k_m)
+void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& open_tracker, const int& node_id, const int& src_id, const int& dst_id, const double& k_m, const double& time_key)
 {
 	//if (u != goal)
 	if (node_id != dst_id)
@@ -227,6 +225,10 @@ void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& ope
 		double rhs;
 		calc_rhs(graph, node_id, dst_id, rhs);
 		graph.vertex_map.at(node_id).get()->cost_rhs = rhs;
+
+		//if(node_id == 144)
+		//	std::cout << "-------------------144 update rhs: -----------------------------" << rhs << std::endl;
+
 	}
 
 	// if (u element of OPEN)
@@ -238,18 +240,23 @@ void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& ope
 	}
 
 	//if g(u) != rhs(u)
-	if (graph.vertex_map.at(node_id).get()->cost_g != graph.vertex_map.at(node_id).get()->cost_rhs)
+	if ( graph.vertex_map.at(node_id).get()->cost_g != graph.vertex_map.at(node_id).get()->cost_rhs)
 	{
+		// !graph.is_goal(node_id) && 
+		//!graph.is_agent_occupancy(node_id) !graph.is_timed_agent_occupancy(node_id, time_key)
 		//OPEN Insert(u, CalcKey)
-		calc_key(graph, k_m, node_id, src_id);
-		open_queue.push(graph.vertex_map.at(node_id));
-		open_tracker.insert(node_id);
+		if ( !graph.is_occupancy(node_id) && !graph.is_agent_occupancy(node_id))
+		{
+			calc_key(graph, k_m, node_id, src_id);
+			open_queue.push(graph.vertex_map.at(node_id));
+			open_tracker.insert(node_id);
+		}
 	}
 }
 
 // computing shortest phat
 template <typename T_graph, typename U_open, typename V_opentracker >
-bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opentracker& open_tracker, const auto& src_id, const auto& dst_id, double& k_m)
+bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opentracker& open_tracker, const auto& src_id, const auto& dst_id, double& k_m, const double& local_time)
 {
 	// while (OPEN.TopKey < CalculateKey(s_start) OR rhs(s_tart) > g(s_start))
 	// we can check for the goal id
@@ -309,7 +316,7 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 			// for all nodes Element of Predecessors (current)
 			for (auto& edg_ver : graph.adjacency_map.at(current.get()->id))
 			{
-				update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m);
+				update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m, local_time);
 			}
 		}
 		else
@@ -318,17 +325,17 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 			current.get()->cost_g = INT_MAX;
 
 			//UpdateVertex(current)
-			update_dstar_vertex(graph, open_queue, open_tracker, current.get()->id, src_id, dst_id, k_m);
+			update_dstar_vertex(graph, open_queue, open_tracker, current.get()->id, src_id, dst_id, k_m, local_time);
 
 			//all neighbours/predecessors
 			for (auto& edg_ver : graph.adjacency_map.at(current.get()->id))
 			{
 				//UpdateVertex(s)
-				update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m);
+				update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m, local_time);
 			}
 		}
 	}
-		//std::cout << " returned false, start could not been found " << std::endl;
+	//std::cout << " returned false, start could not been found " << std::endl;
 	return false;
 }
 
@@ -354,14 +361,15 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 	std::set<int> blocking_vertices_new;
 
 		//std::cout << "--------------------" << std::endl;
-		//std::cout << "start agent nr." << agent.get()->id << " at: " << src_start << " at: t+ " << local_time << std::endl;
+	//std::cout << "start agent nr." << agent.get()->id << " at: " << src_start << " at: t+ " << local_time << std::endl;
 	path.insert(src_start);
+
+	//std::cout << " start inits edge : " << graph.adjacency_map.at(src_last).size() << std::endl;
 	
 	graph.agent_occupancies.insert(std::make_pair(local_time, std::make_pair(src_start, agent.get()->id)));
 
 	local_time += constants::time_step;
 	//========== MultiAgent ==========
-	
 	std::priority_queue<std::shared_ptr<Vertex>, std::vector<std::shared_ptr<Vertex>>, Compare_Vertices> open_queue;
 	std::set<int> open_tracker;
 
@@ -382,25 +390,19 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 	//========== Time-Sharing ==========
 
 	//local_time is now 1 step further, we cannot take any vertices into account at t 1000
-	
-	//get blocked vertices for t = 1000
-		//std::cout << " old occ" << std::endl;
 	get_affecting_vertices(graph, blocking_vertices_old, agent.get()->id, local_time);
 	for (const auto& ver : blocking_vertices_old)
-	{	
-			//std::cout << " ver: " << ver << " time: " << local_time << std::endl;
+	{
 		//dont block way to get away from vertex
 		if(ver != src_start)
-			set_edges(graph, ver, INT_MAX);
+			set_edges(graph, ver, INT_MAX, false);
 	}
 
-	//here change edges for global obstacles
 	
-
 	//========== Time-Sharing ==========
 
 	//ComputeShortestPath
-	compute_dstarlite_shortest_path(graph, open_queue, open_tracker, src_start, dst_id, k_m);
+	compute_dstarlite_shortest_path(graph, open_queue, open_tracker, src_start, dst_id, k_m, local_time);
 
 	//while s_start != s_goal
 	while (src_start != dst_id)
@@ -417,10 +419,9 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 		find_arg_min(graph, src_start, arg_min);
 		src_start = arg_min;
 
-		//std::cout << "move to:			" << src_start << std::endl;
-
 		//========== MultiAgent ==========
 		//move to start
+
 		move_agent(agent, src_start);
 		path.insert(src_start);
 		//std::cout << "move agent nr." << agent.get()->id << " to: " << src_start << " at: t+ " << local_time << std::endl;
@@ -441,6 +442,9 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 		//all vertices with the same time
 		if (!blocking_vertices_old.empty() || !blocking_vertices_new.empty())
 		{
+			//if(agent.get()->id == 12)
+				//std::cout << " still changes? " << local_time << std::endl;
+
 			//scan for changed vertices/edges, update all edge costs 
 				//what changes? vertices from one step before 
 				//vertices for next step
@@ -467,24 +471,23 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 				//std::cout << " new occ " << std::endl;
 			for (const auto& ver : blocking_vertices_new)
 			{
-					//std::cout << " ver: " << ver << " time: " << local_time << std::endl;
-				set_edges(graph, ver, INT_MAX);
+				set_edges(graph, ver, INT_MAX, true);
 			}
 
-			//free old vertices
+			//free old verticesset_edges
 			for (const auto& ver : blocking_vertices_old)
 			{
-				set_edges(graph, ver, 1);
+				set_edges(graph, ver, 1, true);
 			}
 
 			//updating vertices. after blocking 
 			for (const auto& ver : blocking_vertices_old)
 			{
-				update_dstar_vertex(graph, open_queue, open_tracker, ver, src_id, dst_id, k_m);
+				update_dstar_vertex(graph, open_queue, open_tracker, ver, src_id, dst_id, k_m, local_time);
 			}
 			for (const auto& ver : blocking_vertices_new)
 			{
-				update_dstar_vertex(graph, open_queue, open_tracker, ver, src_id, dst_id, k_m);
+				update_dstar_vertex(graph, open_queue, open_tracker, ver, src_id, dst_id, k_m, local_time);
 			}
 			
 			blocking_vertices_old = blocking_vertices_new;
@@ -492,10 +495,10 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 
 			//========== Time-Sharing ==========
 
-			compute_dstarlite_shortest_path(graph, open_queue, open_tracker, src_start, dst_id, k_m);
+			compute_dstarlite_shortest_path(graph, open_queue, open_tracker, src_start, dst_id, k_m, local_time);
 		}
 	}
 	
-		//std::cout << " end " << std::endl;
+	//std::cout << " end " << std::endl;
 	return true;
 }

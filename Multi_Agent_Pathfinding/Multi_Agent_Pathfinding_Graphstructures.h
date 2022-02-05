@@ -53,8 +53,6 @@ Point(-1, 1, -1),	//DownNorthWest
 
 
 
-
-
 struct Vertex
 {
 	Vertex() {};
@@ -113,6 +111,46 @@ public:
 	
 	std::unordered_multimap<double, std::pair<int, int>> occupancies;
 	//========== MultiAgent ==========
+
+	bool is_goal(const int& vertex_id) 
+	{
+		for (const auto& d : this->destinations)
+		{
+			if(vertex_id == d.second)
+				return true;
+		}
+		return false;
+	}
+
+	bool is_occupancy(const int& vertex_id)
+	{
+		for (const auto& o : this->occupancies)
+		{
+			if(vertex_id == o.second.first)
+				return true;
+		}
+		return false;
+	}
+
+	bool is_agent_occupancy(const int& vertex_id)
+	{
+		for (const auto& a : this->agent_occupancies)
+		{
+			if (vertex_id == a.second.first)
+				return true;
+		}
+		return false;
+	}
+
+	bool is_timed_agent_occupancy(const int& vertex_id, const double& time)
+	{
+		for (const auto& [time_key, ver_agt] : this->agent_occupancies)
+		{
+			if (vertex_id == ver_agt.first && (time_key == time || time_key + constants::time_step == time) )
+				return true;
+		}
+		return false;
+	}
 
 
 	//getter for vertexs and edges
