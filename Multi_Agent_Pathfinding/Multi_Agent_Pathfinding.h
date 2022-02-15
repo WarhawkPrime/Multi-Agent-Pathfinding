@@ -446,7 +446,7 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 		move_agent(agent, src_start);
 		//move_agent(agent);
 
-		std::cout << "move agent nr." << agent.get()->id << " to: " << src_start << " at: t+ " << local_time << std::endl;
+		//std::cout << "move agent nr." << agent.get()->id << " to: " << src_start << " at: t+ " << local_time << std::endl;
 
 		//std::cout << std::endl;
 

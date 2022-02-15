@@ -21,8 +21,7 @@ void agent_heuristic(const T_graph& graph, U_agent& agent, int dst_id)
 	agent.get()->priority = h;
 }
 
-// only moving the agent one step
-template <typename T_agent>
+
 
 /*
 void move_agent(T_agent& agent)
@@ -33,11 +32,32 @@ void move_agent(T_agent& agent)
 	agent.get()->path.pop();
 }
 */
+
+// only moving the agent one step
+template <typename T_agent>
 void move_agent(T_agent& agent, const int& move_to)
 {
 	agent.get()->vertex_position = move_to;
 }
 
+template <typename U_agent>
+void move_agent(U_agent& agent)
+{
+	//std::cout << " move agent: " << agent.get()->id << " to: " << agent.get()->path.front() << std::endl;
+	agent.get()->vertex_position = agent.get()->path.front();
+	agent.get()->path.pop();
+
+	
+
+	/*
+	if (agent.get()->vertex_position == graph.destinations.at(agent.get()->id))
+	{
+		std::cout << "finished? " << std::endl;
+	}
+	*/
+	//if(agent.get()->vertex_position == )
+
+}
 
 
 /*
@@ -53,12 +73,14 @@ bool update_agents(T_graph& graph, U_agents& agents, V_finished& finished)
 	for (auto& agent : agents)
 	{
 
-		std::cout << " path size og: " << agent.get()->id << " " << agent.get()->path.size() << std::endl;
-
 		if (!finished.contains(agent.get()->id))
 		{
-			move_agent(agent, agent.get()->next_step);
-			//move_agent(agent);
+			//move_agent(agent, agent.get()->next_step);
+			move_agent(agent);
+			//std::cout << "agent: " << agent.get()->id << std::endl;
+			//std::cout << "pos:" << agent.get()->vertex_position << std::endl;
+			//std::cout << " goal pos: " << graph.destinations.at(agent.get()->id) << std::endl;
+
 
 			if (agent.get()->vertex_position == graph.destinations.at(agent.get()->id))
 			{
@@ -424,13 +446,14 @@ bool multiagent_main(T_graph& graph, U_agents& agents, int& iterations)
 	
 	bool changed_detected = true;
 
+	//while (finished.size() != agents.size())
 	while (finished.size() != agents.size())
 	{
 		//path calculation
 
-		//if (changed_detected)
-		//{
-			//std::cout << "changes detected " << std::endl;
+		if (changed_detected)
+		{
+			//std::cout << "------ changes detected -------" << std::endl;
 
 			multiagent_dlite(graph, agents, finished);
 
@@ -446,18 +469,21 @@ bool multiagent_main(T_graph& graph, U_agents& agents, int& iterations)
 			//clear all agent timings,
 			graph.agent_occupancies.clear();
 
-		//}
+		}
 		
 		//std::cout << " updating " << std::endl;
-
 		// update agents
 		update_agents(graph, agents, finished);
+
 		
 		//call multiagent for every agent until all finished \newl
-		update_obstacles(graph);
+		changed_detected = update_obstacles(graph);
 
 
 		iterations++;
 	}
+	
+	//std::cout << " all agents finished " << std::endl;
+
 	return true;
 }
