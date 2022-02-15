@@ -42,6 +42,12 @@ struct Agent
 	//========== MultiAgent ==========
 	double priority;
 	int next_step;
+
+	//auto agent_cmp = [](std::shared_ptr<Agent> a0, std::shared_ptr<Agent> a1) {return a0.get()->priority < a1.get()->priority; };
+	//std::set<std::shared_ptr<Agent>, decltype(agent_cmp)> agents;
+
+	std::queue<int> path;
+
 	//========== MultiAgent ==========
 };
 
@@ -93,7 +99,8 @@ void calc_key(T_graph& graph, const double& k_m, const int& node, const int& sta
 	// min(g(node), rhs(node))
 	graph.vertex_map.at(node).get()->key.second = graph.vertex_map.at(node).get()->get_min_g_rhs();
 
-	//std::cout << "calc key first : " << key.first << " calc key second : " << key.second << std::endl;
+	//if(node == 21)
+	//	std::cout << "calc key first : " << graph.vertex_map.at(node).get()->key.first << " calc key second : " << graph.vertex_map.at(node).get()->key.second << std::endl;
 }
 
 template <typename T_key>
@@ -151,9 +158,18 @@ void find_arg_min(T_graph& graph, const int& node, int& arg_min)
 	//for all successor. g should be calculated
 	for (const auto& edg_ver : graph.adjacency_map.at(node))
 	{
-		//double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + graph.vertex_map.at(edg_ver.second).get()->cost_g;
+		double min = 0;
+		min = graph.vertex_map.at(edg_ver.second).get()->cost_g;
 		
-		double val = graph.vertex_map.at(edg_ver.second).get()->cost_rhs;
+		if(graph.vertex_map.at(edg_ver.second).get()->cost_rhs < min)
+			min = graph.vertex_map.at(edg_ver.second).get()->cost_rhs;
+
+
+		//double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + graph.vertex_map.at(edg_ver.second).get()->cost_g;
+		double val = graph.edge_map.at(edg_ver.first).get()->edge_weight + min;
+
+
+		//double val = graph.vertex_map.at(edg_ver.second).get()->cost_rhs;
 
 		//std::cout << "id: " << edg_ver.second << " val: " << val << std::endl;
 		
@@ -225,10 +241,6 @@ void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& ope
 		double rhs;
 		calc_rhs(graph, node_id, dst_id, rhs);
 		graph.vertex_map.at(node_id).get()->cost_rhs = rhs;
-
-		//if(node_id == 144)
-		//	std::cout << "-------------------144 update rhs: -----------------------------" << rhs << std::endl;
-
 	}
 
 	// if (u element of OPEN)
@@ -242,10 +254,9 @@ void update_dstar_vertex(T_graph& graph, U_queue& open_queue, std::set<int>& ope
 	//if g(u) != rhs(u)
 	if ( graph.vertex_map.at(node_id).get()->cost_g != graph.vertex_map.at(node_id).get()->cost_rhs)
 	{
-		// !graph.is_goal(node_id) && 
-		//!graph.is_agent_occupancy(node_id) !graph.is_timed_agent_occupancy(node_id, time_key)
 		//OPEN Insert(u, CalcKey)
-		if ( !graph.is_occupancy(node_id) && !graph.is_agent_occupancy(node_id))
+		
+		if (!graph.is_occupancy(node_id) )
 		{
 			calc_key(graph, k_m, node_id, src_id);
 			open_queue.push(graph.vertex_map.at(node_id));
@@ -330,6 +341,8 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 			//all neighbours/predecessors
 			for (auto& edg_ver : graph.adjacency_map.at(current.get()->id))
 			{
+				//std::cout << " first contact " << edg_ver.second << std::endl;
+
 				//UpdateVertex(s)
 				update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m, local_time);
 			}
@@ -390,15 +403,19 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 	//========== Time-Sharing ==========
 
 	//local_time is now 1 step further, we cannot take any vertices into account at t 1000
+	//std::cout << " current agent occupancies: " << local_time << "for: " << agent.get()->id << std::endl;
+	
 	get_affecting_vertices(graph, blocking_vertices_old, agent.get()->id, local_time);
 	for (const auto& ver : blocking_vertices_old)
 	{
+		//std::cout << " ver: " << ver << std::endl;
 		//dont block way to get away from vertex
 		if(ver != src_start)
 			set_edges(graph, ver, INT_MAX, false);
 	}
-
 	
+
+
 	//========== Time-Sharing ==========
 
 	//ComputeShortestPath
@@ -421,10 +438,22 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 
 		//========== MultiAgent ==========
 		//move to start
+		path.insert(src_start);
+
+		//FIFO path
+		agent.get()->path.push(src_start);
 
 		move_agent(agent, src_start);
-		path.insert(src_start);
-		//std::cout << "move agent nr." << agent.get()->id << " to: " << src_start << " at: t+ " << local_time << std::endl;
+		//move_agent(agent);
+
+		std::cout << "move agent nr." << agent.get()->id << " to: " << src_start << " at: t+ " << local_time << std::endl;
+
+		//std::cout << std::endl;
+
+		//std::cout << "142: " << graph.vertex_map.at(142).get()->cost_g << std::endl;
+		//std::cout << "44: " << graph.vertex_map.at(44).get()->cost_g << std::endl;
+		//std::cout << "87: " << graph.vertex_map.at(87).get()->cost_g << std::endl;
+		//std::cout << "21: " << graph.vertex_map.at(21).get()->cost_g << std::endl;
 
 		if (!moved) 
 		{
@@ -471,12 +500,16 @@ bool dstarlite_main(T_graph& graph, U_agent& agent, V_path& path)
 				//std::cout << " new occ " << std::endl;
 			for (const auto& ver : blocking_vertices_new)
 			{
+				//if (ver == 21)
+					//std::cout << "				block 21" << std::endl;
 				set_edges(graph, ver, INT_MAX, true);
 			}
 
 			//free old verticesset_edges
 			for (const auto& ver : blocking_vertices_old)
 			{
+				//if(ver == 21)
+					//std::cout << "				free 21" << std::endl;
 				set_edges(graph, ver, 1, true);
 			}
 

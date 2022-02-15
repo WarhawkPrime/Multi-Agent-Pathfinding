@@ -108,7 +108,6 @@ public:
 	
 	//time, vertex_id, agent_id
 	std::unordered_multimap<double, std::pair<int, int>> agent_occupancies;
-	
 	std::unordered_multimap<double, std::pair<int, int>> occupancies;
 	//========== MultiAgent ==========
 

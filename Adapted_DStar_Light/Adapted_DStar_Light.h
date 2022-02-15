@@ -4,9 +4,6 @@
 
 #include <queue>
 
-
-
-
 // struct for agent
 struct Agent
 {
@@ -20,7 +17,6 @@ struct Agent
 
 
 // simple helper function to get the minimun of 2 values
-//template <typename U>
 double min(const double& v1, const double& v2)
 {
 	if (v1 <= v2)
@@ -40,7 +36,6 @@ void calc_heuristic(const T_graph& env, int node_id_0, int node_id_1, double alp
 }
 
 // calc key
-// std::shared_ptr<Vertex>
 template <typename T_graph>
 void calc_key(T_graph& graph, const double& k_m, const int& node, const int& start)
 {
@@ -52,8 +47,6 @@ void calc_key(T_graph& graph, const double& k_m, const int& node, const int& sta
 
 	// min(g(node), rhs(node))
 	graph.vertex_map.at(node).get()->key.second = graph.vertex_map.at(node).get()->get_min_g_rhs();
-
-	//std::cout << "calc key first : " << key.first << " calc key second : " << key.second << std::endl;
 }
 
 template <typename T_key>
@@ -62,14 +55,10 @@ bool compare_key(T_key& k0, T_key& k1)
 	return ((k0.first < k1.first) || (k0.first == k1.first && k0.second > k1.second));
 }
 
-
-
 bool queue_comp_key(std::shared_ptr<Vertex>& n0, std::shared_ptr<Vertex>& n1)
 {
 	return ((n0.get()->key.first > n1.get()->key.first) || (n0.get()->key.first == n1.get()->key.first && n0.get()->key.second > n1.get()->key.second));
 }
-
-
 
 struct Compare_Vertices
 {
@@ -78,7 +67,6 @@ struct Compare_Vertices
 		return (queue_comp_key(n0, n1));
 	}
 };
-
 
 template <typename T_queue>
 void delete_from_queue(T_queue& queue, const int& id_to_delete)
@@ -118,7 +106,6 @@ void find_arg_min(T_graph& graph, const int& node, int& arg_min)
 	arg_min = min_val_id;
 }
 
-
 template <typename T_agent>
 void move_agent(T_agent& agent, int move_to)
 {
@@ -149,9 +136,6 @@ void calc_rhs_dlite(T_graph& graph, const int& node_id, const int& dst_id, doubl
 
 	for (const auto& edg_ver : ajd)
 	{
-		//only allowed g values are non zero (already calculated) or 0 from scr
-		//if (graph.vertex_map.at(edg_ver.second).get()->cost_g != 0 || edg_ver.second == dst_id)
-		//{
 		double val = graph.vertex_map.at(edg_ver.second).get()->cost_g + graph.edge_map.at(edg_ver.first).get()->edge_weight;
 
 		//update min_val if val is smaller.
@@ -159,7 +143,6 @@ void calc_rhs_dlite(T_graph& graph, const int& node_id, const int& dst_id, doubl
 		{
 			min_val = val;
 		}
-		//}
 	}
 	//set calculated rhs. 
 	rhs = min_val;
@@ -205,12 +188,6 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 	// we can check for the goal id
 	while (!open_queue.empty())
 	{
-		if (graph.vertex_map.at(src_id).get()->cost_rhs == graph.vertex_map.at(src_id).get()->cost_g)
-		{
-			//std::cout << " rhs == g " << std::endl;
-			//return true;
-		}
-
 		std::pair<double, double> k_old;
 		std::pair<double, double> k_new;
 
@@ -221,7 +198,6 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 		open_queue.pop();
 		open_tracker.erase(current.get()->id);	//dont forget the tracker!
 
-
 		//check if OPEN.TopKey < Calckey(s_start)
 		if (current.get()->id == src_id)
 		{
@@ -231,7 +207,6 @@ bool compute_dstarlite_shortest_path(T_graph& graph, U_open& open_queue, V_opent
 			std::cout << "g " << current.get()->cost_g << std::endl;
 			return true;
 		}
-
 
 		calc_key(graph, k_m, src_id, src_id);
 		if (compare_key(graph.vertex_map.at(src_id).get()->key, current.get()->key))
@@ -386,57 +361,6 @@ bool dstarlite_main(T_graph& graph, int s, int d)
 		}
 		//scan graph for changed edge costs
 		//if any edge costs changed
-
-
-		/*
-		It
-		does not make any assumptions about how the edge costs
-		change, whether they go up or down, whether they change
-		close to the current vertex of the robot or far away from it, or
-		whether they change in the world or only because the robot
-		revised its initial estimates
-		*/
-
-		/*
-		if(t)
-		{
-			std::cout << "changes " << std::endl;
-			//k_m = k_m + h(s_last, s_start)
-			double h;
-			calc_lpa_heuristic(graph, src_last, src_start, 1, h);
-			k_m = k_m + h;
-
-			//s_last = s_start
-			src_last = src_start;
-
-			//for all edges(u,v) with changed edge costs
-				//std::vector<std::pair<int, int>> node_weights;
-
-
-			for (auto& node_weight : changes.at(change_timing))
-			{
-				for (auto& edg_ver : graph.adjacency_map.at(node_weight.first))
-				{
-					// Update the edge cost c(u,v)
-					graph.edge_map.at(edg_ver.first).get()->edge_weight = node_weight.second;
-
-					//update_dstar_vertex(graph, open_queue, open_tracker, edg_ver.second, src_id, dst_id, k_m);
-				}
-				//update vertex (u)
-				update_dstar_vertex(graph, open_queue, open_tracker, node_weight.first, src_id, dst_id, k_m);
-
-			}
-
-			//change_timing++;
-			compute_dstarlite_shortest_path(graph, open_queue, open_tracker, src_start, dst_id, k_m);
-		}
-
-		//if (change_timing == changes.size() -1)
-		if (change_timing == changes.size()-1)
-			t = false;
-
-		change_timing++;
-		*/
 	}
 
 	std::cout << " end " << std::endl;

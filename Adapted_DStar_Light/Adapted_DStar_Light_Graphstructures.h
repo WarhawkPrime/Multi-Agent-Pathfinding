@@ -12,6 +12,9 @@
 #include <list>
 #include <algorithm>
 
+
+
+
 namespace constants
 {
 	constexpr int adjacent_number = 26;
