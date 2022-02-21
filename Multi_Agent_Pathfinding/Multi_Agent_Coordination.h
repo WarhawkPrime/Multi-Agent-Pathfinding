@@ -203,13 +203,13 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 	
 	std::shared_ptr<Agent> a3 = std::make_shared<Agent>(3, 500);
 	graph.destinations.insert(std::make_pair(3, 700));
-	
+
 	std::shared_ptr<Agent> a4 = std::make_shared<Agent>(4, 800);
 	graph.destinations.insert(std::make_pair(4, 5));
-	
+
 	std::shared_ptr<Agent> a5 = std::make_shared<Agent>(5, 300);
 	graph.destinations.insert(std::make_pair(5, 212));
-	
+
 	std::shared_ptr<Agent> a6 = std::make_shared<Agent>(6, 900);
 	graph.destinations.insert(std::make_pair(6, 21));
 
@@ -236,7 +236,6 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 
 	std::shared_ptr<Agent> a14 = std::make_shared<Agent>(14, 343);
 	graph.destinations.insert(std::make_pair(14, 117));
-	
 
 	
 	agent_heuristic(graph, a0, 200);
@@ -256,7 +255,7 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 
 	agent_heuristic(graph, a5, 212);
 	agents.insert(a5);
-
+	
 	agent_heuristic(graph, a6, 21);
 	agents.insert(a6);
 
@@ -283,7 +282,6 @@ bool initialize_multiagent(T_graph& graph, U_list& agents)
 
 	agent_heuristic(graph, a14, 117);
 	agents.insert(a14);
-	
 
 	//init every start and destination as infinity
 

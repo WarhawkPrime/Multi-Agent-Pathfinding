@@ -351,6 +351,44 @@ TEST_SUITE("Multi-Agent-Pathfinding tests" * doctest::description("non-functiona
 
 			CHECK(iterations < res_sum);
 		}
+		SUBCASE("timings")
+		{
+
+			std::chrono::microseconds sum;
+			int count = 50;
+
+			Graph graph; 
+			construct_graph(graph, 10);
+
+			for (int i = 0; i < count; i++)
+			{
+				auto agent_cmp = [](std::shared_ptr<Agent> a0, std::shared_ptr<Agent> a1) {return a0.get()->priority < a1.get()->priority; };
+				std::set<std::shared_ptr<Agent>, decltype(agent_cmp)> agents;
+
+				initialize_multiagent(graph, agents);
+				initialize_obstacles(graph);
+
+
+				int iterations = 0;
+
+				auto start = std::chrono::high_resolution_clock::now();
+				multiagent_main(graph, agents, iterations);
+				auto stop = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+				sum += duration;
+
+				auto d = duration.count();
+				//std::cout << "duration: " << d << std::endl; 
+
+			}
+
+			auto s = sum.count();
+			double median = s / count;
+			
+			std::cout << " median for 50: " << median << std::endl;
+
+		}
 
 	}
 }
